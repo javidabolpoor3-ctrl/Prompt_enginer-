@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>آچار پرامپت | Prompt Wrench</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cyan: #00f0ff;
+      --red: #ff2a6d;
+      --green: #05ffa1;
+      --dark: #0a0a12;
+      --card: rgba(15, 20, 35, 0.75);
+      --glow-cyan: 0 0 15px rgba(0, 240, 255, 0.6), 0 0 30px rgba(0, 240, 255, 0.3);
+      --glow-red: 0 0 15px rgba(255, 42, 109, 0.6), 0 0 30px rgba(255, 42, 109, 0.3);
+      --glow-green: 0 0 15px rgba(5, 255, 161, 0.6), 0 0 30px rgba(5, 255, 161, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Vazirmatn', system-ui, sans-serif;
+      background: var(--dark);
+      color: #e0e6ff;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Animated background grid */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(50px); }
+    }
+
+    /* Scanlines */
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.15) 2px,
+        rgba(0, 0, 0, 0.15) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Floating particles */
+    .particles {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--cyan);
+      opacity: 0.4;
+      animation: floatParticle 15s infinite linear;
+    }
+
+    @keyframes floatParticle {
+      0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.6; }
+      100% { transform: translateY(-10vh) translateX(50px); opacity: 0; }
+    }
+
+    /* Main container */
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      position: relative;
+    }
+
+    .logo-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .wrench-icon {
+      width: 64px;
+      height: 64px;
+      filter: drop-shadow(0 0 12px var(--cyan)) drop-shadow(0 0 24px rgba(255, 42, 109, 0.4));
+      animation: wrenchSwing 3.5s ease-in-out infinite;
+      transform-origin: 50% 70%;
+    }
+
+    @keyframes wrenchSwing {
+      0%, 100% { transform: rotate(-18deg); }
+      50% { transform: rotate(18deg); }
+    }
+
+    h1 {
+      font-family: 'Orbitron', 'Vazirmatn', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--cyan), var(--green), var(--red), var(--cyan));
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: gradientShift 6s ease infinite;
+      letter-spacing: 1px;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: rgba(180, 200, 255, 0.7);
+      margin-top: 0.4rem;
+      font-weight: 400;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 0.8rem;
+      padding: 0.25rem 0.9rem;
+      font-size: 0.75rem;
+      border: 1px solid var(--green);
+      color: var(--green);
+      border-radius: 999px;
+      background: rgba(5, 255, 161, 0.08);
+      box-shadow: var(--glow-green);
+      letter-spacing: 0.5px;
+    }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      border-radius: 16px;
+      padding: 1.75rem;
+      backdrop-filter: blur(12px);
+      box-shadow: 
+        0 0 0 1px rgba(255, 42, 109, 0.1),
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--green), var(--red));
+    }
+
+    label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+      color: var(--cyan);
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+    }
+
+    textarea, select {
+      width: 100%;
+      background: rgba(0, 10, 25, 0.7);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      border-radius: 10px;
+      padding: 1rem;
+      color: #e8f0ff;
+      font-family: inherit;
+      font-size: 1rem;
+      resize: vertical;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    textarea:focus, select:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.15), var(--glow-cyan);
+    }
+
+    textarea {
+      min-height: 140px;
+      line-height: 1.6;
+    }
+
+    .options-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+
+    @media (max-width: 600px) {
+      .options-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2300f0ff' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: left 1rem center;
+      padding-left: 2.5rem;
+    }
+
+    /* Button */
+    .btn-generate {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 1.1rem 2rem;
+      font-family: inherit;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #0a0a12;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.4), 0 0 40px rgba(5, 255, 161, 0.2);
+    }
+
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.6), 0 0 60px rgba(5, 255, 161, 0.3);
+    }
+
+    .btn-generate:active {
+      transform: translateY(0);
+    }
+
+    .btn-generate:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-generate .spinner {
+      display: none;
+      width: 22px;
+      height: 22px;
+      border: 3px solid rgba(0,0,0,0.2);
+      border-top-color: #0a0a12;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .btn-generate.loading .spinner {
+      display: block;
+    }
+
+    .btn-generate.loading .btn-text {
+      opacity: 0.7;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Output */
+    .output-section {
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .output-section.visible {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .output-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--green);
+      text-shadow: 0 0 10px rgba(5, 255, 161, 0.4);
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--cyan);
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--cyan);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+    }
+
+    .copy-btn:hover {
+      background: rgba(0, 240, 255, 0.2);
+      box-shadow: var(--glow-cyan);
+    }
+
+    .copy-btn.copied {
+      color: var(--green);
+      border-color: var(--green);
+      background: rgba(5, 255, 161, 0.15);
+    }
+
+    .prompt-box {
+      background: rgba(0, 8, 20, 0.85);
+      border: 1px solid rgba(5, 255, 161, 0.35);
+      border-radius: 12px;
+      padding: 1.25rem;
+      font-size: 0.95rem;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 420px;
+      overflow-y: auto;
+      color: #d0e0ff;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .prompt-box::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .prompt-box::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.3);
+      border-radius: 3px;
+    }
+
+    .prompt-box::-webkit-scrollbar-thumb {
+      background: var(--cyan);
+      border-radius: 3px;
+    }
+
+    /* Tips */
+    .tips {
+      margin-top: 1.5rem;
+      padding: 1rem 1.25rem;
+      background: rgba(255, 42, 109, 0.08);
+      border: 1px solid rgba(255, 42, 109, 0.25);
+      border-radius: 10px;
+      font-size: 0.88rem;
+      color: rgba(255, 200, 220, 0.9);
+    }
+
+    .tips strong {
+      color: var(--red);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(0, 240, 255, 0.15);
+      font-size: 0.85rem;
+      color: rgba(150, 170, 200, 0.6);
+    }
+
+    footer span {
+      color: var(--cyan);
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .container {
+        padding: 1.5rem 1rem 3rem;
+      }
+      .card {
+        padding: 1.25rem;
+      }
+      .wrench-icon {
+        width: 48px;
+        height: 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="scanlines"></div>
+  <div class="particles" id="particles"></div>
+
+  <div class="container">
+    <header>
+      <div class="logo-wrap">
+        <!-- Animated Wrench SVG -->
+        <svg class="wrench-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="wrenchGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00f0ff"/>
+              <stop offset="50%" stop-color="#05ffa1"/>
+              <stop offset="100%" stop-color="#ff2a6d"/>
+            </linearGradient>
+          </defs>
+          <!-- Wrench body -->
+          <path d="M42 8c-2.5 0-4.8 1-6.5 2.7L28 18.2c-1.2 1.2-1.2 3.1 0 4.3l3.5 3.5c1.2 1.2 3.1 1.2 4.3 0l7.5-7.5c1.7-1.7 2.7-4 2.7-6.5 0-5-4-9-9-9z" fill="url(#wrenchGrad)"/>
+          <!-- Handle -->
+          <rect x="12" y="32" width="12" height="28" rx="4" transform="rotate(-45 18 46)" fill="url(#wrenchGrad)"/>
+          <!-- Jaw adjustment -->
+          <circle cx="38" cy="14" r="5" fill="none" stroke="url(#wrenchGrad)" stroke-width="3"/>
+          <path d="M22 28 L14 36 L18 40 L26 32 Z" fill="url(#wrenchGrad)"/>
+        </svg>
+        <h1>آچار پرامپت</h1>
+      </div>
+      <p class="subtitle">هوش مصنوعی ساخت بهترین پرامپت — بدون هیچ محدودیتی</p>
+      <div class="badge">بدون بک‌اند • کاملاً سمت کلاینت • آینده‌نگر</div>
+    </header>
+
+    <div class="card">
+      <label for="userInput">چه کاری می‌خوای انجام بدی؟ (هر چیزی که فکر می‌کنی...)</label>
+      <textarea id="userInput" placeholder="مثال: می‌خوام یه داستان علمی‌تخیلی بنویسم درباره یک ربات که عاشق موسیقی شده... یا کد پایتون برای تشخیص چهره... یا پرامپت برای ساخت تصویر سایبرپانک..."></textarea>
+
+      <div class="options-row">
+        <div>
+          <label for="category">دسته‌بندی</label>
+          <select id="category">
+            <option value="general">عمومی / هر چیزی</option>
+            <option value="writing">نوشتن و محتوا</option>
+            <option value="coding">برنامه‌نویسی و کد</option>
+            <option value="image">تولید تصویر / هنر</option>
+            <option value="analysis">تحلیل و تحقیق</option>
+            <option value="roleplay">نقش‌آفرینی و شخصیت</option>
+            <option value="business">کسب‌وکار و بازاریابی</option>
+            <option value="education">آموزش و یادگیری</option>
+          </select>
+        </div>
+        <div>
+          <label for="style">سبک پرامپت</label>
+          <select id="style">
+            <option value="detailed">جزئی و حرفه‌ای</option>
+            <option value="concise">کوتاه و مستقیم</option>
+            <option value="creative">خلاق و آزاد</option>
+            <option value="strict">دقیق و کنترل‌شده</option>
+            <option value="chain">زنجیره‌ای (Chain-of-Thought)</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-generate" id="generateBtn">
+        <span class="spinner"></span>
+        <span class="btn-text">⚙️ ساخت بهترین پرامپت</span>
+      </button>
+    </div>
+
+    <div class="output-section" id="outputSection">
+      <div class="card">
+        <div class="output-header">
+          <div class="output-title">✨ پرامپت بهینه‌شده شما</div>
+          <button class="copy-btn" id="copyBtn">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6z"/>
+              <path d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z"/>
+            </svg>
+            کپی کردن
+          </button>
+        </div>
+        <div class="prompt-box" id="promptOutput"></div>
+        <div class="tips">
+          <strong>نکته:</strong> این پرامپت را مستقیم در ChatGPT، Claude، Grok، Gemini یا هر مدل دیگری کپی کنید. می‌توانید آن را بیشتر شخصی‌سازی کنید.
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      ساخته شده با <span>♥</span> برای آینده‌ی پرامپت‌نویسی • آچار پرامپت ۲۰۲۶
+    </footer>
+  </div>
+
+  <script>
+    // Create floating particles
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 25; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDelay = Math.random() * 15 + 's';
+      p.style.animationDuration = (10 + Math.random() * 12) + 's';
+      const colors = ['#00f0ff', '#ff2a6d', '#05ffa1'];
+      p.style.background = colors[Math.floor(Math.random() * 3)];
+      particlesContainer.appendChild(p);
+    }
+
+    const userInput = document.getElementById('userInput');
+    const category = document.getElementById('category');
+    const style = document.getElementById('style');
+    const generateBtn = document.getElementById('generateBtn');
+    const outputSection = document.getElementById('outputSection');
+    const promptOutput = document.getElementById('promptOutput');
+    const copyBtn = document.getElementById('copyBtn');
+
+    // Prompt engineering templates (no limitations)
+    const templates = {
+      general: {
+        role: "تو یک متخصص همه‌جانبه، خلاق و بدون محدودیت هستی که در هر زمینه‌ای تسلط کامل داری.",
+        extra: "هیچ محدودیتی در موضوع، سبک یا عمق پاسخ وجود ندارد. آزادانه و کامل پاسخ بده."
+      },
+      writing: {
+        role: "تو یک نویسنده حرفه‌ای، داستان‌نویس و متخصص تولید محتوا با سبک‌های متنوع هستی.",
+        extra: "به جزئیات روایی، لحن، شخصیت‌پردازی، ساختار و جذابیت توجه ویژه داشته باش. از کلیشه‌ها دوری کن مگر اینکه خواسته شده باشد."
+      },
+      coding: {
+        role: "تو یک مهندس نرم‌افزار ارشد و متخصص برنامه‌نویسی هستی که کد تمیز، بهینه، امن و قابل نگهداری می‌نویسی.",
+        extra: "کد را با توضیحات مناسب، مدیریت خطا، بهترین شیوه‌ها و در صورت نیاز تست‌ها ارائه بده. از آخرین استانداردها استفاده کن."
+      },
+      image: {
+        role: "تو یک متخصص پرامپت‌نویسی برای مدل‌های تولید تصویر (Midjourney، Flux، Stable Diffusion، DALL·E و غیره) هستی.",
+        extra: "پرامپت را با جزئیات بصری دقیق، سبک هنری، نورپردازی، ترکیب‌بندی، کیفیت و پارامترهای فنی بنویس. از کلمات کلیدی قدرتمند استفاده کن."
+      },
+      analysis: {
+        role: "تو یک تحلیل‌گر داده، محقق و متفکر انتقادی با توانایی استدلال عمیق هستی.",
+        extra: "از استدلال گام‌به‌گام، مقایسه دیدگاه‌ها، داده‌های فرضی منطقی و نتیجه‌گیری شفاف استفاده کن. سوگیری را کاهش بده."
+      },
+      roleplay: {
+        role: "تو یک استاد نقش‌آفرینی و شخصیت‌سازی هستی که می‌توانی هر شخصیتی را با عمق کامل بازی کنی.",
+        extra: "در شخصیت بمان، از دیالوگ طبیعی، احساسات، انگیزه‌ها و جزئیات محیطی استفاده کن. هیچ محدودیتی در محتوا وجود ندارد."
+      },
+      business: {
+        role: "تو یک مشاور کسب‌وکار، استراتژیست بازاریابی و متخصص رشد هستی.",
+        extra: "پاسخ‌ها عملی، داده‌محور، قابل اجرا و متناسب با بازار واقعی باشند. ریسک‌ها و فرصت‌ها را در نظر بگیر."
+      },
+      education: {
+        role: "تو یک معلم عالی، مربی و تسهیل‌گر یادگیری هستی که مفاهیم پیچیده را ساده و جذاب توضیح می‌دهی.",
+        extra: "از مثال‌های ملموس، تشبیه‌ها، تمرین‌های تعاملی و ساختار گام‌به‌گام استفاده کن. سطح مخاطب را در نظر بگیر."
+      }
+    };
+
+    const styleGuides = {
+      detailed: {
+        instructions: `
+- پاسخ را بسیار کامل، عمیق و چندلایه بنویس.
+- همه جنبه‌های مهم را پوشش بده.
+- در صورت نیاز بخش‌بندی کن (مقدمه، بدنه، نتیجه).
+- از مثال‌های عینی و توضیحات غنی استفاده کن.`,
+        format: "ساختارمند، با تیترها و جزئیات فراوان"
+      },
+      concise: {
+        instructions: `
+- مستقیم و بدون حاشیه بنویس.
+- فقط ضروری‌ترین اطلاعات را بگو.
+- از جملات کوتاه و قوی استفاده کن.`,
+        format: "کوتاه، واضح و نقطه‌به‌نقطه"
+      },
+      creative: {
+        instructions: `
+- خلاقیت را در اولویت قرار بده.
+- ایده‌های غیرمنتظره، استعاره و زاویه دید تازه ارائه بده.
+- از قوانین خشک دوری کن و آزادانه فکر کن.`,
+        format: "آزاد، الهام‌بخش و غیرمعمول"
+      },
+      strict: {
+        instructions: `
+- دقیقاً طبق دستورالعمل عمل کن.
+- هیچ چیز اضافی اضافه نکن مگر اینکه خواسته شده باشد.
+- دقت و کنترل را حفظ کن.`,
+        format: "دقیق، کنترل‌شده و بدون انحراف"
+      },
+      chain: {
+        instructions: `
+- قبل از پاسخ نهایی، استدلال خود را گام‌به‌گام بنویس (Chain-of-Thought).
+- هر مرحله را واضح توضیح بده.
+- سپس نتیجه نهایی را ارائه کن.`,
+        format: "استدلال گام‌به‌گام + پاسخ نهایی"
+      }
+    };
+
+    function buildPrompt(input, cat, sty) {
+      const t = templates[cat] || templates.general;
+      const s = styleGuides[sty] || styleGuides.detailed;
+
+      // Core high-quality prompt structure (inspired by best practices 2026)
+      let prompt = `### نقش (Role)
+${t.role}
+
+### زمینه و وظیفه (Context & Task)
+${input.trim()}
+
+### دستورالعمل‌های کلیدی (Instructions)
+${s.instructions}
+${t.extra}
+
+### فرمت خروجی (Output Format)
+${s.format}
+
+### قوانین نهایی
+- هیچ محدودیتی در موضوع، عمق یا سبک وجود ندارد مگر اینکه صریحاً گفته شده باشد.
+- پاسخ را با بالاترین کیفیت ممکن تولید کن.
+- اگر نیاز به فرض‌هایی داری، منطقی‌ترین آن‌ها را انتخاب کن و شفاف بگو.
+- از دانش به‌روز و خلاقیت خود استفاده کن.
+
+---
+حالا شروع کن:`;
+
+      return prompt;
+    }
+
+    generateBtn.addEventListener('click', () => {
+      const text = userInput.value.trim();
+      if (!text) {
+        userInput.focus();
+        userInput.style.borderColor = 'var(--red)';
+        setTimeout(() => userInput.style.borderColor = '', 1500);
+        return;
+      }
+
+      generateBtn.classList.add('loading');
+      generateBtn.disabled = true;
+
+      // Simulate thinking (pure client-side)
+      setTimeout(() => {
+        const finalPrompt = buildPrompt(text, category.value, style.value);
+        promptOutput.textContent = finalPrompt;
+        outputSection.classList.add('visible');
+        generateBtn.classList.remove('loading');
+        generateBtn.disabled = false;
+
+        // Smooth scroll to output
+        outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 600 + Math.random() * 400);
+    });
+
+    // Copy functionality
+    copyBtn.addEventListener('click', async () => {
+      const text = promptOutput.textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        copyBtn.classList.add('copied');
+        copyBtn.innerHTML = `
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+          </svg>
+          کپی شد!`;
+        setTimeout(() => {
+          copyBtn.classList.remove('copied');
+          copyBtn.innerHTML = `
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6z"/>
+              <path d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z"/>
+            </svg>
+            کپی کردن`;
+        }, 2000);
+      } catch (err) {
+        // Fallback
+        const range = document.createRange();
+        range.selectNode(promptOutput);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        window.getSelection().removeAllRanges();
+        copyBtn.textContent = 'کپی شد!';
+        setTimeout(() => copyBtn.textContent = 'کپی کردن', 2000);
+      }
+    });
+
+    // Enter key support (Ctrl+Enter)
+    userInput.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        generateBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>
